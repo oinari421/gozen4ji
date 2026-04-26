@@ -9,8 +9,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ posts: [] });
     }
 
-    const now = new Date().toISOString();
-
     const { data, error } = await supabaseAdmin
       .from("posts")
       .select(`
@@ -37,7 +35,6 @@ export async function POST(request: Request) {
       .eq("session_id", sessionId)
       .eq("status", "active")
       .eq("is_deleted", false)
-      .gt("expires_at", now)
       .order("created_at", { ascending: false });
 
     if (error || !data) {
