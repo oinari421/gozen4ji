@@ -37,7 +37,6 @@ export default function LatestPost() {
   const data = await res.json();
   setPosts(data.posts || []);
 }
-
   async function sendEmpathy(postId: string) {
     setMessage("");
 

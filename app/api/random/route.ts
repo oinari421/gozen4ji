@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     const { data, error } = await query;
 
     if (error || !data) {
+      console.error("random posts error:", error);
       return NextResponse.json({ posts: [] });
     }
 

@@ -68,19 +68,19 @@ export default function OpenView() {
           </button>
         </div>
 
-        {tab === "everyone" ? (
-          <>
-            <PostForm
-              onPosted={() => {
-                setRefreshKey((v) => v + 1);
-                fetchNotificationCount();
-              }}
-            />
-            <LatestPost key={refreshKey} />
-          </>
-        ) : (
-          <MyPostsView />
-        )}
+       {tab === "everyone" ? (
+  <>
+    <PostForm
+      onPosted={() => {
+        setRefreshKey((v) => v + 1);
+        fetchNotificationCount();
+      }}
+    />
+    <LatestPost key={refreshKey} />
+  </>
+) : (
+  <MyPostsView key={`${refreshKey}-${tab}`} />
+)}
       </div>
     </main>
   );

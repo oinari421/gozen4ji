@@ -26,15 +26,39 @@ function hashString(value: string) {
   return Math.abs(hash);
 }
 
-function getJapanDateKey() {
+function getTodayKey() {
   const now = getJapanNow();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
 
-  return now.toISOString().slice(0, 10);
+  return `${year}-${month}-${day}`;
 }
 
 export function getAnonymousIdentity(sessionId: string) {
-  const dateKey = getJapanDateKey();
-  const hash = hashString(`${sessionId}-${dateKey}`);
+  const todayKey = getTodayKey();
+
+  if (typeof window !== "undefined") {
+    const storageKey = `anonymous_identity_${todayKey}`;
+    const saved = localStorage.getItem(storageKey);
+
+    if (saved) {
+      return JSON.parse(saved);
+    }
+
+    const hash = hashString(`${sessionId}-${todayKey}`);
+
+    const identity = {
+      icon: icons[hash % icons.length],
+      name: names[hash % names.length],
+    };
+
+    localStorage.setItem(storageKey, JSON.stringify(identity));
+
+    return identity;
+  }
+
+  const hash = hashString(`${sessionId}-${todayKey}`);
 
   return {
     icon: icons[hash % icons.length],
