@@ -21,7 +21,7 @@ export function getJapanNow(): Date {
 }
 
 export function isOpenNow(): boolean {
-  return true;
+  return false;
 }
 
 export function getNextOpenRemaining() {
