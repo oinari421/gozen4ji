@@ -38,9 +38,12 @@ export async function POST(request: Request) {
       .order("created_at", { ascending: false });
 
     if (error || !data) {
-      console.error("my-posts error:", error);
-      return NextResponse.json({ posts: [] });
-    }
+  console.error("my-posts error:", error);
+  return NextResponse.json({
+    posts: [],
+    error,
+  });
+}
 
     return NextResponse.json({ posts: data });
   } catch (e) {
