@@ -19,7 +19,7 @@ type Post = {
 };
 
 function getTodayKey() {
-  const now = new Date();
+  const now = new Date("2026-04-28T12:00:00+09:00");
 
   if (now.getHours() < 4) {
     now.setDate(now.getDate() - 1);
