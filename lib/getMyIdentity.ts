@@ -1,3 +1,5 @@
+import { getDayKey } from "@/lib/time";
+
 export async function getMyIdentity() {
   const key = "gozen4ji_session_id";
 
@@ -8,19 +10,7 @@ export async function getMyIdentity() {
     localStorage.setItem(key, sessionId);
   }
 
- const now = new Date("2026-04-29T12:00:00+09:00");
-
-  if (now.getHours() < 4) {
-    now.setDate(now.getDate() - 1);
-  }
-
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-
-  const todayKey = `${year}-${month}-${day}`;
-
-  const daySessionId = `${sessionId}_${todayKey}`;
+  const daySessionId = `${sessionId}_${getDayKey()}`;
 
   const res = await fetch("/api/identity", {
     method: "POST",

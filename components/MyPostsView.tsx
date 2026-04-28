@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getDayKey } from "@/lib/time";
 
 type Reply = {
   id: string;
@@ -18,19 +19,7 @@ type Post = {
   replies?: Reply[];
 };
 
-function getTodayKey() {
-  const now = new Date("2026-04-29T12:00:00+09:00");
 
-  if (now.getHours() < 4) {
-    now.setDate(now.getDate() - 1);
-  }
-
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
 
 function getSessionId() {
   const key = "gozen4ji_session_id";
@@ -42,9 +31,8 @@ function getSessionId() {
     localStorage.setItem(key, value);
   }
 
-  return `${value}_${getTodayKey()}`;
+  return `${value}_${getDayKey()}`;
 }
-
 function formatTime(value: string) {
   return new Date(value).toLocaleTimeString("ja-JP", {
     hour: "2-digit",

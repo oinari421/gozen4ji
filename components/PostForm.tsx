@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getDayKey } from "@/lib/time";
 
 export default function PostForm({ onPosted }: { onPosted?: () => void }) {
   const [text, setText] = useState("");
@@ -139,19 +140,7 @@ function validatePostText(text: string) {
   );
 }
 
-function getTodayKey() {
-  const now = new Date("2026-04-29T12:00:00+09:00");
 
-  if (now.getHours() < 4) {
-    now.setDate(now.getDate() - 1);
-  }
-
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
 
 function getSessionId() {
   if (typeof window === "undefined") return "server";
@@ -164,7 +153,7 @@ function getSessionId() {
     localStorage.setItem(key, value);
   }
 
-  return `${value}_${getTodayKey()}`;
+  return `${value}_${getDayKey()}`;
 }
 
 const styles: Record<string, React.CSSProperties> = {
