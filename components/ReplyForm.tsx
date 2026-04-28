@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getSessionId } from "@/lib/session";
 
 type Props = {
   postId: string;
@@ -73,33 +74,6 @@ export default function ReplyForm({ postId, onReplied }: Props) {
   );
 }
 
-function getTodayKey() {
-  const now = new Date();
-
-  if (now.getHours() < 4) {
-    now.setDate(now.getDate() - 1);
-  }
-
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function getSessionId() {
-  if (typeof window === "undefined") return "server";
-
-  const key = "gozen4ji_session_id";
-  let value = localStorage.getItem(key);
-
-  if (!value) {
-    value = crypto.randomUUID();
-    localStorage.setItem(key, value);
-  }
-
-  return `${value}_${getTodayKey()}`;
-}
 
 const styles: Record<string, React.CSSProperties> = {
   wrap: {

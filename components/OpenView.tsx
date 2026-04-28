@@ -6,6 +6,8 @@ import LatestPost from "./LatestPost";
 import MyPostsView from "./MyPostsView";
 import TodayIdentityIntro from "./TodayIdentityIntro";
 import NightHeader from "./NightHeader";
+import { getSessionId } from "@/lib/session";
+
 
 export default function OpenView() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -13,7 +15,7 @@ export default function OpenView() {
   const [notificationCount, setNotificationCount] = useState(0);
 
   async function fetchNotificationCount() {
-    const sessionId = localStorage.getItem("gozen4ji_session_id");
+    const sessionId = getSessionId();
 
     if (!sessionId) return;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getDayKey } from "@/lib/time";
+import { getSessionId } from "@/lib/session";
 
 type Reply = {
   id: string;
@@ -21,18 +21,6 @@ type Post = {
 
 
 
-function getSessionId() {
-  const key = "gozen4ji_session_id";
-
-  let value = localStorage.getItem(key);
-
-  if (!value) {
-    value = crypto.randomUUID();
-    localStorage.setItem(key, value);
-  }
-
-  return `${value}_${getDayKey()}`;
-}
 function formatTime(value: string) {
   return new Date(value).toLocaleTimeString("ja-JP", {
     hour: "2-digit",

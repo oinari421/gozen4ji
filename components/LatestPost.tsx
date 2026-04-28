@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ReplyForm from "./ReplyForm";
 import { getAnonymousIdentity } from "@/lib/anonymousIdentity";
+import { getSessionId } from "@/lib/session";
 
 type Reply = {
   id: string;
@@ -24,7 +25,7 @@ export default function LatestPost() {
   const [message, setMessage] = useState("");
 
   async function fetchPosts() {
-  const sessionId = localStorage.getItem("gozen4ji_session_id");
+  const sessionId = getSessionId();
 
   const res = await fetch("/api/random", {
     method: "POST",
@@ -40,7 +41,7 @@ export default function LatestPost() {
   async function sendEmpathy(postId: string) {
     setMessage("");
 
-    const sessionId = localStorage.getItem("gozen4ji_session_id");
+    const sessionId = getSessionId();
 
     if (!sessionId) {
       setMessage("セッション情報がありません。");
@@ -72,7 +73,7 @@ export default function LatestPost() {
   }
 
   useEffect(() => {
-    const sessionId = localStorage.getItem("gozen4ji_session_id") || "";
+    const sessionId = getSessionId();
     setMySessionId(sessionId);
 
     fetchPosts();

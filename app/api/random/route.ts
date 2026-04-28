@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { getJapanNow } from "@/lib/time";
 
 export async function POST(request: Request) {
   try {
     const { sessionId } = await request.json();
-    const now = new Date().toISOString();
+
+    const now = getJapanNow().toISOString();
 
     let query = supabaseAdmin
       .from("posts")
@@ -37,9 +39,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ posts: [] });
     }
 
-    return NextResponse.json({ posts: data });
+    return NextResponse.json({
+      posts: data,
+    });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ posts: [] });
+
+    return NextResponse.json({
+      posts: [],
+    });
   }
 }

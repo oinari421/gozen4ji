@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getDayKey } from "@/lib/time";
+import { getSessionId } from "@/lib/session";
 
 export default function PostForm({ onPosted }: { onPosted?: () => void }) {
   const [text, setText] = useState("");
@@ -141,20 +141,6 @@ function validatePostText(text: string) {
 }
 
 
-
-function getSessionId() {
-  if (typeof window === "undefined") return "server";
-
-  const key = "gozen4ji_session_id";
-  let value = localStorage.getItem(key);
-
-  if (!value) {
-    value = crypto.randomUUID();
-    localStorage.setItem(key, value);
-  }
-
-  return `${value}_${getDayKey()}`;
-}
 
 const styles: Record<string, React.CSSProperties> = {
   card: {
