@@ -2,14 +2,37 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getClientIp, hashIp } from "@/lib/session";
 import { validatePostText } from "@/lib/validation";
+import { getJapanNow } from "@/lib/time";
 
 export async function POST(request: Request) {
   try {
     const { text, sessionId } = await request.json();
 
+    if (!sessionId) {
+      return NextResponse.json(
+        { error: "セッション情報がありません。" },
+        { status: 400 }
+      );
+    }
+
     const errorMessage = validatePostText(text);
     if (errorMessage) {
       return NextResponse.json({ error: errorMessage }, { status: 400 });
+    }
+
+    const { data: identity, error: identityError } = await supabaseAdmin
+      .from("daily_identities")
+      .select("display_name, display_icon")
+      .eq("session_id", sessionId)
+      .maybeSingle();
+
+    if (identityError || !identity) {
+      console.error("identity fetch error:", identityError);
+
+      return NextResponse.json(
+        { error: "匿名名の取得に失敗しました。" },
+        { status: 400 }
+      );
     }
 
     const ip = getClientIp(request);
@@ -41,8 +64,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const now = new Date();
+    const now = getJapanNow();
     const expiresAt = new Date(now);
+
     expiresAt.setHours(4, 0, 0, 0);
 
     if (now.getHours() >= 4) {
@@ -54,6 +78,8 @@ export async function POST(request: Request) {
       session_id: sessionId,
       ip_hash: ipHash,
       expires_at: expiresAt.toISOString(),
+      display_name: identity.display_name,
+      display_icon: identity.display_icon,
     });
 
     if (error) {

@@ -11,17 +11,19 @@ export async function POST(request: Request) {
     let query = supabaseAdmin
       .from("posts")
       .select(`
-        id,
-        text,
-        session_id,
-        created_at,
-        reply_count,
-        empathy_count,
-        replies (
-          id,
-          text
-        )
-      `)
+  id,
+  text,
+  session_id,
+  display_name,
+  display_icon,
+  created_at,
+  reply_count,
+  empathy_count,
+  replies (
+    id,
+    text
+  )
+`)
       .eq("status", "active")
       .eq("is_deleted", false)
       .gt("expires_at", now)
