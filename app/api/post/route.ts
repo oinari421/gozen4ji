@@ -3,10 +3,72 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getClientIp, hashIp } from "@/lib/session";
 import { validatePostText } from "@/lib/validation";
 import { getJapanNow } from "@/lib/time";
+import { icons, names } from "@/lib/identityPool";
+
+function getDayKey() {
+  const now = getJapanNow();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function pickRandom<T>(items: T[]) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+async function getOrCreateIdentity(sessionId: string, dayKey: string) {
+  const { data: existing, error: selectError } = await supabaseAdmin
+    .from("daily_identities")
+    .select("display_name, display_icon")
+    .eq("session_id", sessionId)
+    .eq("day_key", dayKey)
+    .maybeSingle();
+
+  if (selectError) {
+    throw selectError;
+  }
+
+  if (existing) {
+    return existing;
+  }
+
+  const shuffledNames = [...names].sort(() => Math.random() - 0.5);
+
+  for (const name of shuffledNames) {
+    const icon = pickRandom(icons);
+
+    const { data, error } = await supabaseAdmin
+      .from("daily_identities")
+      .insert({
+        session_id: sessionId,
+        day_key: dayKey,
+        display_name: name,
+        display_icon: icon,
+      })
+      .select("display_name, display_icon")
+      .single();
+
+    if (!error && data) {
+      return data;
+    }
+
+    if (error?.code !== "23505") {
+      throw error;
+    }
+  }
+
+  throw new Error("今日使える名前がなくなりました。");
+}
 
 export async function POST(request: Request) {
   try {
-    const { text, sessionId } = await request.json();
+    const body = await request.json();
+
+    const text = body.text;
+    const sessionId = body.sessionId ?? body.session_id;
 
     if (!sessionId) {
       return NextResponse.json(
@@ -16,27 +78,39 @@ export async function POST(request: Request) {
     }
 
     const errorMessage = validatePostText(text);
+
     if (errorMessage) {
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
-    const { data: identity, error: identityError } = await supabaseAdmin
-      .from("daily_identities")
-      .select("display_name, display_icon")
-      .eq("session_id", sessionId)
-      .maybeSingle();
+    const dayKey = getDayKey();
 
-    if (identityError || !identity) {
-      console.error("identity fetch error:", identityError);
-
-      return NextResponse.json(
-        { error: "匿名名の取得に失敗しました。" },
-        { status: 400 }
-      );
-    }
+    const identity = await getOrCreateIdentity(sessionId, dayKey);
 
     const ip = getClientIp(request);
     const ipHash = hashIp(ip);
+
+    const { data: banned, error: banError } = await supabaseAdmin
+      .from("banned_ips")
+      .select("id")
+      .eq("ip_hash", ipHash)
+      .maybeSingle();
+
+    if (banError) {
+      console.error("BAN check error:", banError);
+
+      return NextResponse.json(
+        { error: "投稿確認に失敗しました。" },
+        { status: 500 }
+      );
+    }
+
+    if (banned) {
+      return NextResponse.json(
+        { error: "投稿できません。" },
+        { status: 403 }
+      );
+    }
 
     const tenSecondsAgo = new Date(Date.now() - 10 * 1000).toISOString();
 
@@ -80,20 +154,25 @@ export async function POST(request: Request) {
       expires_at: expiresAt.toISOString(),
       display_name: identity.display_name,
       display_icon: identity.display_icon,
+      is_deleted: false,
     });
 
     if (error) {
       console.error("Supabase insert error:", error);
 
       return NextResponse.json(
-        { error: error.message, code: error.code, details: error.details },
+        {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+        },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error(e);
+    console.error("post api error:", e);
 
     return NextResponse.json(
       { error: "投稿に失敗しました。" },

@@ -18,7 +18,7 @@ export async function getMyIdentity() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      sessionId: daySessionId,
+      session_id: daySessionId,
     }),
   });
 

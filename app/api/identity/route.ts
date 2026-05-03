@@ -20,7 +20,8 @@ function pickRandom<T>(items: T[]) {
 
 export async function POST(request: Request) {
   try {
-    const { sessionId } = await request.json();
+    const body = await request.json();
+    const sessionId = body.session_id ?? body.sessionId;
 
     if (!sessionId) {
       return NextResponse.json(
@@ -28,6 +29,8 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // 以下そのまま
 
     const dayKey = getDayKey();
 
