@@ -57,6 +57,9 @@ export default function AdminPage() {
 
   const [message, setMessage] = useState("");
 
+
+  console.log("入力:", password);
+console.log("env:", process.env.ADMIN_PASSWORD);
   async function login() {
     const res = await fetch("/api/admin/login", {
       method: "POST",

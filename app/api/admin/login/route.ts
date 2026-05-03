@@ -4,7 +4,7 @@ export async function POST(request: Request) {
   const { password } = await request.json();
 
   console.log("入力:", password);
-console.log("env:", process.env.ADMIN_PASSWORD);
+  console.log("env:", process.env.ADMIN_PASSWORD);
 
   if (password !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json(
