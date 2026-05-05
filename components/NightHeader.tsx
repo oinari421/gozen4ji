@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAnonymousIdentity } from "@/lib/anonymousIdentity";
 
 type Identity = {
   icon: string;
@@ -49,6 +48,29 @@ export default function NightHeader() {
   const [remainingHours, setRemainingHours] = useState(0);
   const [theme, setTheme] = useState("");
 
+  async function fetchIdentity() {
+    try {
+      const sessionId = getSessionId();
+
+      const res = await fetch("/api/identity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sessionId }),
+      });
+
+      const data = await res.json();
+
+      setIdentity({
+        name: data.name,
+        icon: data.icon,
+      });
+    } catch (error) {
+      console.error("identity fetch error:", error);
+    }
+  }
+
   async function updateActiveCount() {
     try {
       const sessionId = getSessionId();
@@ -89,9 +111,7 @@ export default function NightHeader() {
   }
 
   useEffect(() => {
-    const sessionId = getSessionId();
-
-    setIdentity(getAnonymousIdentity(sessionId));
+    fetchIdentity();
     fetchTheme();
     updateRemaining();
     updateActiveCount();
