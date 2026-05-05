@@ -1,36 +1,35 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const AUTO_HIDE_COUNT = 3;
-
 export async function POST(request: Request) {
   try {
-    const { postId, sessionId, reason } = await request.json();
+    const { postId, reason } = await request.json();
 
-    if (!postId || !sessionId || !reason) {
+    if (!postId) {
       return NextResponse.json(
-        { error: "通報情報が不足しています。" },
+        { error: "postId がありません。" },
         { status: 400 }
       );
     }
 
-    const { error: insertError } = await supabaseAdmin
+    if (!reason) {
+      return NextResponse.json(
+        { error: "通報理由がありません。" },
+        { status: 400 }
+      );
+    }
+
+    // 1. 通報を保存
+    const { error: reportError } = await supabaseAdmin
       .from("reports")
       .insert({
         post_id: postId,
-        session_id: sessionId,
         reason,
+        status: "pending",
       });
 
-    if (insertError) {
-      if (insertError.code === "23505") {
-        return NextResponse.json(
-          { error: "この投稿はすでに通報済みです。" },
-          { status: 409 }
-        );
-      }
-
-      console.error("report insert error:", insertError);
+    if (reportError) {
+      console.error("report insert error:", reportError);
 
       return NextResponse.json(
         { error: "通報に失敗しました。" },
@@ -38,25 +37,49 @@ export async function POST(request: Request) {
       );
     }
 
-    const { count, error: countError } = await supabaseAdmin
-      .from("reports")
-      .select("id", { count: "exact", head: true })
-      .eq("post_id", postId);
+    // 2. 現在の投稿情報を取得
+    const { data: post, error: postError } = await supabaseAdmin
+      .from("posts")
+      .select("id, report_count")
+      .eq("id", postId)
+      .maybeSingle();
 
-    if (countError) {
-      console.error("report count error:", countError);
+    if (postError || !post) {
+      console.error("post fetch error:", postError);
+
+      return NextResponse.json(
+        { error: "投稿情報の取得に失敗しました。" },
+        { status: 500 }
+      );
     }
 
-    if ((count ?? 0) >= AUTO_HIDE_COUNT) {
-      await supabaseAdmin
-        .from("posts")
-        .update({ is_hidden: true })
-        .eq("id", postId);
+    const nextReportCount = (post.report_count ?? 0) + 1;
+
+    // 3. 通報数を増やす。3件以上なら制限中にする
+    const { error: updateError } = await supabaseAdmin
+      .from("posts")
+      .update({
+        report_count: nextReportCount,
+        is_restricted: nextReportCount >= 3,
+      })
+      .eq("id", postId);
+
+    if (updateError) {
+      console.error("post report_count update error:", updateError);
+
+      return NextResponse.json(
+        { error: "通報数の更新に失敗しました。" },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      report_count: nextReportCount,
+      is_restricted: nextReportCount >= 3,
+    });
   } catch (error) {
-    console.error(error);
+    console.error("report api error:", error);
 
     return NextResponse.json(
       { error: "通報に失敗しました。" },

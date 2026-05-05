@@ -29,8 +29,10 @@ export async function POST(request: Request) {
   .eq("session_id", sessionId)
   .eq("status", "active")
   .eq("is_deleted", false)
+  .eq("is_restricted", false) // ← 追加
   .order("created_at", { ascending: false });
 
+  
     if (error || !data) {
   console.error("my-posts error:", error);
   return NextResponse.json({

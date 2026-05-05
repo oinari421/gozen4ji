@@ -63,6 +63,44 @@ async function getOrCreateIdentity(sessionId: string, dayKey: string) {
   throw new Error("今日使える名前がなくなりました。");
 }
 
+async function checkBan(ipHash: string) {
+  const now = new Date().toISOString();
+
+  const { data: ban, error } = await supabaseAdmin
+    .from("banned_ips")
+    .select("id, ban_type, expires_at, status")
+    .eq("ip_hash", ipHash)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!ban) {
+    return null;
+  }
+
+  if (ban.ban_type === "temporary") {
+    if (!ban.expires_at) {
+      return ban;
+    }
+
+    if (new Date(ban.expires_at).toISOString() <= now) {
+      await supabaseAdmin
+        .from("banned_ips")
+        .update({ status: "inactive" })
+        .eq("id", ban.id);
+
+      return null;
+    }
+
+    return ban;
+  }
+
+  return ban;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -84,30 +122,23 @@ export async function POST(request: Request) {
     }
 
     const dayKey = getDayKey();
-
     const identity = await getOrCreateIdentity(sessionId, dayKey);
 
     const ip = getClientIp(request);
     const ipHash = hashIp(ip);
 
-    const { data: banned, error: banError } = await supabaseAdmin
-      .from("banned_ips")
-      .select("id")
-      .eq("ip_hash", ipHash)
-      .maybeSingle();
+    const activeBan = await checkBan(ipHash);
 
-    if (banError) {
-      console.error("BAN check error:", banError);
+    if (activeBan) {
+      if (activeBan.ban_type === "temporary") {
+        return NextResponse.json(
+          { error: "現在、一定期間投稿が制限されています。" },
+          { status: 403 }
+        );
+      }
 
       return NextResponse.json(
-        { error: "投稿確認に失敗しました。" },
-        { status: 500 }
-      );
-    }
-
-    if (banned) {
-      return NextResponse.json(
-        { error: "投稿できません。" },
+        { error: "このユーザーは投稿できません。" },
         { status: 403 }
       );
     }

@@ -11,6 +11,8 @@ type Post = {
   is_deleted: boolean;
   reply_count: number | null;
   empathy_count: number | null;
+  display_name: string | null;
+  display_icon: string | null;
 };
 
 export async function GET(request: Request) {
@@ -24,9 +26,11 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const date = searchParams.get("date");
 
-  const targetDate = date ?? new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Asia/Tokyo",
-  });
+  const targetDate =
+    date ??
+    new Date().toLocaleDateString("sv-SE", {
+      timeZone: "Asia/Tokyo",
+    });
 
   const start = new Date(`${targetDate}T00:00:00+09:00`);
   const end = new Date(`${targetDate}T00:00:00+09:00`);
@@ -52,6 +56,8 @@ export async function GET(request: Request) {
       ip_hash: string | null;
       post_count: number;
       latest_post_at: string;
+      display_name: string | null;
+      display_icon: string | null;
     }
   >();
 
@@ -62,6 +68,8 @@ export async function GET(request: Request) {
         ip_hash: post.ip_hash,
         post_count: 0,
         latest_post_at: post.created_at,
+        display_name: post.display_name ?? null,
+        display_icon: post.display_icon ?? null,
       });
     }
 
@@ -70,6 +78,8 @@ export async function GET(request: Request) {
 
     if (new Date(post.created_at) > new Date(user.latest_post_at)) {
       user.latest_post_at = post.created_at;
+      user.display_name = post.display_name ?? user.display_name;
+      user.display_icon = post.display_icon ?? user.display_icon;
     }
   }
 

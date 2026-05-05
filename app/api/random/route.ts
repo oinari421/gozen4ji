@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     text
   )
 `)
+      .eq("is_restricted", false)
       .eq("is_hidden", false)
       .eq("status", "active")
       .eq("is_deleted", false)
