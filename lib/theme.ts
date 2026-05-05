@@ -1,6 +1,6 @@
 import { getJapanNow } from "@/lib/time";
 
-const themes = [
+export const fallbackThemes = [
   "最近少し救われたことは？",
   "まだ誰にも言っていない本音は？",
   "眠れない理由は？",
@@ -33,8 +33,9 @@ function getNightIndex() {
   return days + DEBUG_THEME_OFFSET;
 }
 
-export function getTonightTheme() {
+
+export function getFallbackTonightTheme() {
   const index = getNightIndex();
 
-  return themes[index % themes.length];
+  return fallbackThemes[index % fallbackThemes.length];
 }

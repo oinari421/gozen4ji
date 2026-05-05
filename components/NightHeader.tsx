@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { getAnonymousIdentity } from "@/lib/anonymousIdentity";
-import { getTonightTheme } from "@/lib/theme";
 
 type Identity = {
   icon: string;
@@ -51,18 +50,36 @@ export default function NightHeader() {
   const [theme, setTheme] = useState("");
 
   async function updateActiveCount() {
-    const sessionId = getSessionId();
+    try {
+      const sessionId = getSessionId();
 
-    const res = await fetch("/api/active", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ sessionId }),
-    });
+      const res = await fetch("/api/active", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sessionId }),
+      });
 
-    const data = await res.json();
-    setActiveCount(data.count || 0);
+      const data = await res.json();
+      setActiveCount(data.count || 0);
+    } catch (error) {
+      console.error("active count error:", error);
+    }
+  }
+
+  async function fetchTheme() {
+    try {
+      const res = await fetch("/api/theme", {
+        cache: "no-store",
+      });
+
+      const data = await res.json();
+      setTheme(data.theme ?? "");
+    } catch (error) {
+      console.error("theme fetch error:", error);
+      setTheme("");
+    }
   }
 
   function updateRemaining() {
@@ -75,7 +92,7 @@ export default function NightHeader() {
     const sessionId = getSessionId();
 
     setIdentity(getAnonymousIdentity(sessionId));
-    setTheme(getTonightTheme());
+    fetchTheme();
     updateRemaining();
     updateActiveCount();
 

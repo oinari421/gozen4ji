@@ -176,11 +176,14 @@ if (isCheckingAuth) {
 
       {/* ナビ */}
       <nav style={styles.nav}>
-        <a href="/admin/posts">全投稿一覧</a>
-        <a href="/admin/users">全ユーザー一覧</a>
-        <a href="/admin/reports">通報一覧</a>
-        <a href="/admin/bans">BAN一覧</a>
-        <a href="/admin/review">要確認投稿</a>
+<nav style={styles.nav}>
+  <a href="/admin/posts">全投稿一覧</a>
+  <a href="/admin/users">全ユーザー一覧</a>
+  <a href="/admin/reports">通報一覧</a>
+  <a href="/admin/bans">BAN一覧</a>
+  <a href="/admin/review">要確認投稿</a>
+  <a href="/admin/themes">今日の問い管理</a>
+</nav>
       </nav>
 
       {/* stats */}
