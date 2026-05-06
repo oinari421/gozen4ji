@@ -1,30 +1,57 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAnonymousIdentity } from "@/lib/anonymousIdentity";
+
+function getSessionId() {
+  const key = "gozen4ji_session_id";
+  let value = localStorage.getItem(key);
+
+  if (!value) {
+    value = crypto.randomUUID();
+    localStorage.setItem(key, value);
+  }
+
+  return value;
+}
 
 export default function TodayIdentityIntro() {
   const [show, setShow] = useState(false);
-  const [identity, setIdentity] = useState<{ icon: string; name: string } | null>(
-    null
-  );
+  const [identity, setIdentity] = useState<{ icon: string; name: string } | null>(null);
 
   useEffect(() => {
-    const sessionId = localStorage.getItem("gozen4ji_session_id");
+    async function init() {
+      const sessionId = getSessionId();
 
-    if (!sessionId) return;
+      const todayKey = new Date().toISOString().slice(0, 10);
+      const storageKey = `identity_intro_seen_${todayKey}`;
 
-    const todayKey = new Date().toISOString().slice(0, 10);
-    const storageKey = `identity_intro_seen_${todayKey}`;
+      const alreadySeen = localStorage.getItem(storageKey);
 
-    const alreadySeen = localStorage.getItem(storageKey);
+      try {
+        const res = await fetch("/api/identity", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sessionId }),
+        });
 
-    const myIdentity = getAnonymousIdentity(sessionId);
-    setIdentity(myIdentity);
+        const data = await res.json();
 
-    if (!alreadySeen) {
-      setShow(true);
+        setIdentity({
+          name: data.name,
+          icon: data.icon,
+        });
+
+        if (!alreadySeen) {
+          setShow(true);
+        }
+      } catch (error) {
+        console.error("identity fetch error:", error);
+      }
     }
+
+    init();
   }, []);
 
   function closeIntro() {
