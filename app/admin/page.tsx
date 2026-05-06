@@ -184,6 +184,7 @@ if (isCheckingAuth) {
   <a href="/admin/review">要確認投稿</a>
   <a href="/admin/themes">今日の問い管理</a>
   <a href="/admin/identities">匿名名・アイコン管理</a>
+  <a href="/admin/ng-words">NGワード管理</a>
 </nav>
       </nav>
 
