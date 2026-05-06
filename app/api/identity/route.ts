@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getJapanNow } from "@/lib/time";
-import { icons, names } from "@/lib/identityPool";
-
 
 function getDayKey() {
   const now = getJapanNow();
@@ -30,8 +28,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // 以下そのまま
-
     const dayKey = getDayKey();
 
     const { data: existing } = await supabaseAdmin
@@ -46,6 +42,34 @@ export async function POST(request: Request) {
         name: existing.display_name,
         icon: existing.display_icon,
       });
+    }
+
+    const { data: nameList, error: nameError } = await supabaseAdmin
+      .from("identity_names")
+      .select("name")
+      .eq("is_active", true);
+
+    if (nameError) {
+      console.error("identity_names error:", nameError);
+    }
+
+    const { data: iconList, error: iconError } = await supabaseAdmin
+      .from("identity_icons")
+      .select("icon")
+      .eq("is_active", true);
+
+    if (iconError) {
+      console.error("identity_icons error:", iconError);
+    }
+
+    const names = nameList?.map((item) => item.name) ?? [];
+    const icons = iconList?.map((item) => item.icon) ?? [];
+
+    if (names.length === 0 || icons.length === 0) {
+      return NextResponse.json(
+        { error: "使用できる名前またはアイコンがありません。" },
+        { status: 409 }
+      );
     }
 
     const shuffledNames = [...names].sort(() => Math.random() - 0.5);
